@@ -2,6 +2,8 @@
 
 ![Petit script pour créer une merge request depuis le terminal](./cli-mr-creator.gif)
 
+## Node version used 16.17.0
+
 ## Config
 
 __Créer un fichier .env à la racine de votre home directory__
