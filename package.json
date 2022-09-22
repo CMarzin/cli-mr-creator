@@ -1,6 +1,6 @@
 {
   "name": "cli-mr-creator",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "Create a merge request from the terminal for Gitlab",
   "main": "cli.js",
   "type": "module",
@@ -8,7 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "cli-mr-creator": "cli-mr-creator",
     "dev": "NODE_ENV=dev babel-node cli.js",
-    "build": "babel cli.js -d bin"
+    "build": "babel cli.js -d bin && babel helpers/index.js -d bin/helpers"
   },
   "author": "Corentin Marzin",
   "license": "ISC",
