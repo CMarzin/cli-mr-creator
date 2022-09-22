@@ -1,0 +1,36 @@
+{
+  "name": "cli-mr-creator",
+  "version": "1.2.2",
+  "description": "Create a merge request from the terminal for Gitlab",
+  "main": "cli.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "cli-mr-creator": "cli-mr-creator",
+    "dev": "NODE_ENV=dev babel-node cli.js",
+    "build": "babel cli.js -d bin"
+  },
+  "author": "Corentin Marzin",
+  "license": "ISC",
+  "bin": {
+    "cli-mr-creator": "./bin/cli.js"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.8.7",
+    "axios": "^0.27.2",
+    "colors": "^1.4.0",
+    "dotenv": "^16.0.1",
+    "enquirer": "^2.3.4",
+    "nodegit": "^0.28.0-alpha.18"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.8.7",
+    "@babel/node": "^7.8.7",
+    "@babel/plugin-transform-runtime": "^7.8.3",
+    "@babel/preset-env": "^7.8.7"
+  },
+  "volta": {
+    "node": "16.16.0"
+  }
+}
