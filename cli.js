@@ -54,11 +54,12 @@ try {
   process.exit(0);
 }
 
-const currentBranchName = getCurrentBranchName()
 let currentRedmineRefTicket = ''
 
+// disable redmine ticket for now
+// refactor this part to create some extend function later
 if (redmineUrl !== void 0 || redmineUrl !== '') {
-  currentRedmineRefTicket = buildRefTicketRedmine(redmineUrl, currentBranchName)
+  // currentRedmineRefTicket = buildRefTicketRedmine(redmineUrl, currentBranchName)
 }
 
 async function createMergeRequest (dataFromPrompt, mrAssignee) {
@@ -97,8 +98,9 @@ async function createMergeRequest (dataFromPrompt, mrAssignee) {
     })
 
     let mergeRequestUrl = `${baseUrl}/${project.data.id}/merge_requests`
+    const sourceBranch = await getCurrentBranchName()
 
-    mergeRequestUrl += `?source_branch=${currentBranchName}`
+    mergeRequestUrl += `?source_branch=${sourceBranch}`
     mergeRequestUrl += `&target_branch=${dataFromPrompt.target_branch}`
     mergeRequestUrl += `&title=${dataFromPrompt.title}`
     mergeRequestUrl += `&description=${dataFromPrompt.description}`
@@ -124,40 +126,40 @@ async function createMergeRequest (dataFromPrompt, mrAssignee) {
     } else {
       console.log('URL : ', colors.cyan(error.response.config.url))
       console.log('Something went wrong : ', colors.red(error.response.statusText), error.response.status)
-      console.log('Error message : ', colors.red(error.response.data.error))
+      console.log('Error message : ', colors.red(error.response.data))
     }
   }
 }
-
-/*
-* Config prompt
-*/
-
-const defaultChoices = {
-  target_branch: 'master',
-  title: currentBranchName,
-  description: currentRedmineRefTicket,
-  remove_source_branch: 'false',
-  squash: 'false'
-}
-
-const promptForm = new Form({
-  name: 'user',
-  message: `Veuillez remplir les informations suivantes pour créer votre merge request: ${colors.cyan('[tab ou flèches pour se déplacer]')}`,
-  choices: [
-    { name: 'target_branch', message: 'Spécifiez la branche cible', initial: defaultChoices.target_branch },
-    { name: 'title', message: 'Entrez le nom de la merge request', initial: defaultChoices.title },
-    { name: 'description', message: 'Entrez votre description', initial: defaultChoices.description },
-    { name: 'remove_source_branch', message: 'Supprimer la branche après le merge', initial: defaultChoices.remove_source_branch },
-    { name: 'squash', message: 'Squash commit', initial: defaultChoices.squash }
-  ]
-});
 
 /*
 * Execute prompt
 */
 
 async function executePrompts () {
+
+/*
+* Config prompt
+*/
+
+  const defaultChoices = {
+    target_branch: 'master',
+    title: await getCurrentBranchName(),
+    description: currentRedmineRefTicket,
+    remove_source_branch: 'false',
+    squash: 'false'
+  }
+
+  const promptForm = new Form({
+    name: 'user',
+    message: `Veuillez remplir les informations suivantes pour créer votre merge request: ${colors.cyan('[tab ou flèches pour se déplacer]')}`,
+    choices: [
+      { name: 'target_branch', message: 'Spécifiez la branche cible', initial: defaultChoices.target_branch },
+      { name: 'title', message: 'Entrez le nom de la merge request', initial: defaultChoices.title },
+      { name: 'description', message: 'Entrez votre description', initial: defaultChoices.description },
+      { name: 'remove_source_branch', message: 'Supprimer la branche après le merge', initial: defaultChoices.remove_source_branch },
+      { name: 'squash', message: 'Squash commit', initial: defaultChoices.squash }
+    ]
+  });
 
   try {
 

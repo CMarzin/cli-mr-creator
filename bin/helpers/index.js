@@ -1,19 +1,19 @@
-import fs from 'fs';
-import path from 'path';
 import nodegit from 'nodegit';
 import axios from 'axios';
+import { exec } from 'child_process';
+import util from 'util';
+const execProcess = util.promisify(exec);
 
-function getCurrentBranchName(p = process.cwd()) {
-  const gitHeadPath = `${p}/.git/HEAD`;
-
-  if (fs.existsSync(p)) {
-    return fs.existsSync(gitHeadPath) ? fs.readFileSync(gitHeadPath, 'utf-8').trim().split('/')[2] : getCurrentBranchName(path.resolve(p, '..'));
-  } else {
-    return false;
+const getCurrentBranchName = async () => {
+  try {
+    const {
+      stdout
+    } = await execProcess('git rev-parse --abbrev-ref HEAD');
+    return stdout.trim();
+  } catch (e) {
+    console.error(e); // should contain code (exit code) and signal (that caused the termination).
   }
-}
-
-;
+};
 
 function buildRefTicketRedmine(redmineUrl, currentBranchName) {
   // Get the last five character of the string which are the ID of the ticket
