@@ -80,7 +80,6 @@ async function createMergeRequest(dataFromPrompt, mrAssignee) {
     mergeRequestUrl += `&remove_source_branch=${dataFromPrompt.remove_source_branch}`;
     mergeRequestUrl += `&squash=${dataFromPrompt.squash}`;
     mergeRequestUrl += `&assignee_id=${mrAssignee}`;
-    console.log('mergeRequestUrl', mergeRequestUrl);
     const response = await axios({
       method: 'post',
       url: mergeRequestUrl,

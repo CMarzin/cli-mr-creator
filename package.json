@@ -1,6 +1,6 @@
 {
   "name": "cli-mr-creator",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "description": "Create a merge request from the terminal for Gitlab",
   "main": "cli.js",
   "type": "module",
