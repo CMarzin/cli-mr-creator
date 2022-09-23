@@ -28,6 +28,8 @@ DEV_GROUP=
 
 ## Redmine
 
+**Disabled for now, waitng for a refactor**
+
 J'utilise Redmine pour la gestion des tickets. Si vous voulez que dans la description de la merge request vous y trouviez automatiquement un lien vers votre ticket il suffit d'écrire l'id de votre issu à la fin de votre nom de branche.
 
 Exemple :
@@ -53,4 +55,5 @@ npx cli-mr-creator
 
 # TODO
 - Refactor call api in order
+- Système de module afin de rajouter des extensions pour les logiciels de ticketings ( Jira etc...)
 - Traduction : FR / EN
