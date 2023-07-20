@@ -4,11 +4,8 @@ const homedir = os.homedir();
 import * as dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
 const __filename = fileURLToPath(import.meta.url);
-
 const __dirname = path.dirname(__filename);
-
 let config = process.env.NODE_ENV === 'dev' ? {
   path: __dirname + '/.env'
 } : {
@@ -25,29 +22,28 @@ import colors from 'colors';
 import { getCurrentBranchName, buildRefTicketRedmine, getAssignee, getRemoteUrl } from './helpers/index.js';
 let token = '';
 let redmineUrl = '';
+
 /*
 * Check token and redmine url
 */
 
 try {
   token = process.env['TOKEN'];
-
   if (token === void 0 || token === '') {
     throw "Veuillez spécifier le token pour accéder à l'api Gitlab dans un fichier ENV";
   }
-
   redmineUrl = process.env['REDMINE_URL'];
 } catch (error) {
   console.log(colors.red('Erreur :'), error);
   process.exit(0);
 }
+let currentRedmineRefTicket = '';
 
-let currentRedmineRefTicket = ''; // disable redmine ticket for now
+// disable redmine ticket for now
 // refactor this part to create some extend function later
-
-if (redmineUrl !== void 0 || redmineUrl !== '') {// currentRedmineRefTicket = buildRefTicketRedmine(redmineUrl, currentBranchName)
+if (redmineUrl !== void 0 || redmineUrl !== '') {
+  // currentRedmineRefTicket = buildRefTicketRedmine(redmineUrl, currentBranchName)
 }
-
 async function createMergeRequest(dataFromPrompt, mrAssignee) {
   try {
     const regex = /([^\/]*$)/gm;
@@ -67,7 +63,8 @@ async function createMergeRequest(dataFromPrompt, mrAssignee) {
     const project = await axios({
       method: 'get',
       url: currentUrlProject,
-      headers: { ...headers,
+      headers: {
+        ...headers,
         'Content-Type': 'application/x-www-form-urlencoded'
       }
     });
@@ -85,7 +82,6 @@ async function createMergeRequest(dataFromPrompt, mrAssignee) {
       url: mergeRequestUrl,
       headers
     });
-
     if (response.status === 201) {
       console.log(`Congratulations your created the Merge Request : ${colors.green(response.data.title)}`);
       console.log(`Available here : ${colors.green(response.data.web_url)}`);
@@ -100,15 +96,16 @@ async function createMergeRequest(dataFromPrompt, mrAssignee) {
     }
   }
 }
+
 /*
 * Execute prompt
 */
-
 
 async function executePrompts() {
   /*
   * Config prompt
   */
+
   const defaultChoices = {
     target_branch: 'master',
     title: await getCurrentBranchName(),
@@ -141,7 +138,6 @@ async function executePrompts() {
       initial: defaultChoices.squash
     }]
   });
-
   try {
     const formResult = await promptForm.run();
     const assignee = await getAssignee();
@@ -149,7 +145,6 @@ async function executePrompts() {
       name: 'assignee',
       message: `Veuillez séléctionner un(e) développeur(euse) pour revoir votre merge request : ${colors.cyan('[tab ou flèches pour se déplacer, espace pour séléctionner]')}`,
       choices: assignee,
-
       result(name) {
         const valueAssignee = this.choices.find(choice => {
           if (choice.name === name) {
@@ -158,7 +153,6 @@ async function executePrompts() {
         });
         return valueAssignee.value;
       }
-
     });
     const mrAssignee = await promptSelect.run();
     createMergeRequest(formResult, mrAssignee);
@@ -166,5 +160,4 @@ async function executePrompts() {
     console.log('error', error);
   }
 }
-
 executePrompts();
