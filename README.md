@@ -2,7 +2,7 @@
 
 ![Petit script pour créer une merge request depuis le terminal](./cli-mr-creator.gif)
 
-## Node version used 18.17.0
+## Node version used 20.15.1
 
 ## Config
 
