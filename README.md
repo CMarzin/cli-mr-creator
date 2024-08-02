@@ -12,48 +12,34 @@ __Créer un fichier .env à la racine de votre home directory__
 cd ~ && mkdir cli-mr-creator && cd cli-mr-creator && touch .env
 ```
 
-Rajouter votre token Gitlab et c'est parti
 __Env file__
-```
-TOKEN=
-```
-
-Afin d'avoir une liste de personnes pour review vos MR il faut rajouter dans le fichier .env le nom de votre groupe de développeurs.
-
-__Env file__
-```
-TOKEN=
-DEV_GROUP=
+```env
+TOKEN= // Gitlab access token
+DEV_GROUP= // organisation
+API_URL= // example: https://gitlab.com
+TARGET_BRANCH= // master/main/develop etc...
+REMOVE_SOURCE_BRANCH= // boolean
+SQUASH= // boolean
 ```
 
-## Redmine
-
-**Disabled for now, waitng for a refactor**
-
-J'utilise Redmine pour la gestion des tickets. Si vous voulez que dans la description de la merge request vous y trouviez automatiquement un lien vers votre ticket il suffit d'écrire l'id de votre issu à la fin de votre nom de branche.
-
-Exemple :
-```
-great-feature-30499 -> https://url.redmine.fr/issues/30499
-```
-
-## Utiliser le script
+## Use the script
 
 ```sh
-# Installer le script en local
+# Local installation
 npm i cli-mr-creator
 
-# Ou bien en global
+# Global installation
 npm i -g cli-mr-creator
 
-# Et ensuite
+# and you can summon the command in your cli
 cli-mr-creator
 
-# Ou bien simplement lancer le script avec npx
+# Or you can launch it with npx
 npx cli-mr-creator
 ```
 
 # TODO
-- Refactor call api in order
-- Système de module afin de rajouter des extensions pour les logiciels de ticketings ( Jira etc...)
-- Traduction : FR / EN
+[] open source the code
+[] Refactor call api in order
+[] Système de module afin de rajouter des extensions pour les logiciels de ticketings ( Jira etc...)
+[] Traduction : FR / EN

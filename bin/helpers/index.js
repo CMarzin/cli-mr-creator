@@ -13,23 +13,13 @@ const getCurrentBranchName = async () => {
     console.error(e); // should contain code (exit code) and signal (that caused the termination).
   }
 };
-
-function buildRefTicketRedmine(redmineUrl, currentBranchName) {
-  // Get the last five character of the string which are the ID of the ticket
-  let getTicketId = currentBranchName.slice(currentBranchName.length - 5);
-  if (isNaN(getTicketId)) {
-    return '';
-  } else {
-    return `${redmineUrl}/issues/${getTicketId}`;
-  }
-}
-async function getAssignee() {
+async function getMembers() {
   const url = `${process.env['API_URL']}/api/v4/groups/${process.env['DEV_GROUP']}/members?per_page=100`;
   const headers = {
     'Private-token': process.env['TOKEN']
   };
   try {
-    const assignee = await axios({
+    const members = await axios({
       method: 'get',
       url: url,
       headers: {
@@ -37,14 +27,40 @@ async function getAssignee() {
         'Content-Type': 'application/x-www-form-urlencoded'
       }
     });
-    let assigneeArray = [];
-    for (let i = 0; i < assignee.data.length; i++) {
-      assigneeArray.push({
-        name: assignee.data[i].name,
-        value: assignee.data[i].id
+    let membersArray = [];
+    for (let i = 0; i < members.data.length; i++) {
+      membersArray.push({
+        name: members.data[i].name,
+        value: members.data[i].id
       });
     }
-    return assigneeArray;
+    return membersArray;
+  } catch (error) {
+    console.log('error', error);
+  }
+}
+async function getLabels(baseUrl) {
+  const url = `${baseUrl}/labels`;
+  const headers = {
+    'Private-token': process.env['TOKEN']
+  };
+  try {
+    const response = await axios({
+      method: 'get',
+      url: url,
+      headers: {
+        ...headers,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
+    let labels = [];
+    for (let i = 0; i < response.data.length; i++) {
+      labels.push({
+        name: response.data[i].name,
+        value: response.data[i].id
+      });
+    }
+    return labels;
   } catch (error) {
     console.log('error', error);
   }
@@ -60,4 +76,4 @@ async function getRemoteUrl(gitPath, remoteName) {
   }
 }
 ;
-export { getCurrentBranchName, buildRefTicketRedmine, getAssignee, getRemoteUrl };
+export { getCurrentBranchName, getMembers, getLabels, getRemoteUrl };
