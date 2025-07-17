@@ -1,4 +1,6 @@
+/* @ts-expect-error nodegit is not typed */
 import nodegit from 'nodegit'
+
 import axios from 'axios'
 import { exec } from 'child_process'
 import util from 'util'
@@ -7,16 +9,18 @@ const execProcess = util.promisify(exec)
 
 const getCurrentBranchName = async () => {
   try {
-    const { stdout } = await execProcess('git rev-parse --abbrev-ref HEAD');
+    const { stdout } = await execProcess('git rev-parse --abbrev-ref HEAD')
     return stdout.trim()
   } catch (e) {
-    console.error(e); // should contain code (exit code) and signal (that caused the termination).
+    console.error(e) // should contain code (exit code) and signal (that caused the termination).
   }
-
 }
 
-async function getMembers () {
+function getApiUrl() {
+  return process.env['API_URL'] || 'https://gitlab.com'
+}
 
+async function getMembers() {
   const url = `${process.env['API_URL']}/api/v4/groups/${process.env['DEV_GROUP']}/members?per_page=100`
   const headers = {
     'Private-token': process.env['TOKEN'],
@@ -28,8 +32,8 @@ async function getMembers () {
       url: url,
       headers: {
         ...headers,
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
     })
 
     let membersArray = []
@@ -37,7 +41,7 @@ async function getMembers () {
     for (let i = 0; i < members.data.length; i++) {
       membersArray.push({
         name: members.data[i].name,
-        value: members.data[i].id
+        value: members.data[i].id,
       })
     }
 
@@ -47,8 +51,7 @@ async function getMembers () {
   }
 }
 
-async function getLabels (baseUrl) {
-
+async function getLabels(baseUrl: string) {
   const url = `${baseUrl}/labels`
 
   const headers = {
@@ -61,8 +64,8 @@ async function getLabels (baseUrl) {
       url: url,
       headers: {
         ...headers,
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
     })
 
     let labels = []
@@ -70,7 +73,7 @@ async function getLabels (baseUrl) {
     for (let i = 0; i < response.data.length; i++) {
       labels.push({
         name: response.data[i].name,
-        value: response.data[i].id
+        value: response.data[i].id,
       })
     }
 
@@ -80,21 +83,15 @@ async function getLabels (baseUrl) {
   }
 }
 
-async function getRemoteUrl (gitPath, remoteName) {
+async function getRemoteUrl(gitPath: string, remoteName: string) {
   try {
-    let repository = await nodegit.Repository.open(gitPath);
-    let remoteObject = await repository.getRemote(remoteName);
-    let remoteUrl = await remoteObject.url();
-    return remoteUrl;
+    let repository = await nodegit.Repository.open(gitPath)
+    let remoteObject = await repository.getRemote(remoteName)
+    let remoteUrl = await remoteObject.url()
+    return remoteUrl
   } catch (error) {
-    console.log(error);
+    console.log(error)
   }
-};
-
-
-export {
-  getCurrentBranchName,
-  getMembers,
-  getLabels,
-  getRemoteUrl
 }
+
+export { getCurrentBranchName, getMembers, getLabels, getRemoteUrl }

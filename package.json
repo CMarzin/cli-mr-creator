@@ -2,21 +2,39 @@
   "name": "cli-mr-creator",
   "version": "2.1.0",
   "description": "Create a merge request from the terminal for Gitlab",
-  "main": "cli.js",
-  "type": "module",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "cli-mr-creator": "cli-mr-creator",
-    "dev": "NODE_ENV=dev babel-node cli.js",
-    "build": "babel cli.js -d bin && babel helpers/index.js -d bin/helpers"
+  "keywords": [
+    "cli",
+    "gitlab",
+    "typescript"
+  ],
+  "bugs": {
+    "url": "https://github.com/CMarzin/cli-mr-creator/issues"
   },
-  "author": "Corentin Marzin",
-  "license": "ISC",
+  "author": "Corentin Marzin ( https://corentinmarzin.fr/ )",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CMarzin/cli-mr-creator"
+  },
+  "license": "MIT",
+  "files": [
+    "bin"
+  ],
+  "type": "module",
+  "main": "bin/cli.js",
   "bin": {
     "cli-mr-creator": "bin/cli.js"
   },
+  "scripts": {
+    "cli-mr-creator": "cli-mr-creator",
+    "dev": "NODE_ENV=dev tsx src/cli.ts",
+    "build": "tsc",
+    "format": "prettier --write .",
+    "check-format": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "ci": "npm run build && npm run check-format && npm run test"
+  },
   "dependencies": {
-    "@babel/runtime": "^7.24.8",
     "axios": "^1.7.2",
     "colors": "^1.4.0",
     "dotenv": "^16.4.5",
@@ -24,10 +42,9 @@
     "nodegit": "^0.28.0-alpha.21"
   },
   "devDependencies": {
-    "@babel/cli": "^7.24.8",
-    "@babel/core": "^7.24.9",
-    "@babel/node": "^7.24.8",
-    "@babel/plugin-transform-runtime": "^7.24.7",
-    "@babel/preset-env": "^7.24.8"
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   }
 }
