@@ -42,7 +42,8 @@
     "colors": "^1.4.0",
     "dotenv": "^16.4.5",
     "enquirer": "^2.4.1",
-    "nodegit": "^0.28.0-alpha.21"
+    "nodegit": "^0.28.0-alpha.33",
+    "isomorphic-git": "^1.25.10"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
