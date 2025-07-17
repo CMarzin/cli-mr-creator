@@ -30,7 +30,7 @@
   "scripts": {
     "cli-mr-creator": "cli-mr-creator",
     "dev": "NODE_ENV=dev tsx src/cli.ts",
-    "build": "tsc",
+    "build": "tsc && npm run format",
     "format": "prettier --write .",
     "check-format": "prettier --check .",
     "test": "vitest run",
