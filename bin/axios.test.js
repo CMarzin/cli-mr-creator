@@ -1,10 +1,10 @@
-import { getHeaders } from './axios.js';
-import { describe, it, expect } from 'vitest';
+import { getHeaders } from './axios.js'
+import { describe, it, expect } from 'vitest'
 describe('getHeaders', () => {
-    it('should return the correct headers', () => {
-        expect(getHeaders()).toEqual({
-            'Content-Type': 'application/x-www-form-urlencoded',
-        });
-    });
-});
+  it('should return the correct headers', () => {
+    expect(getHeaders()).toEqual({
+      'Content-Type': 'application/x-www-form-urlencoded',
+    })
+  })
+})
 //# sourceMappingURL=axios.test.js.map
