@@ -24,6 +24,9 @@
   "bin": {
     "cli-mr-creator": "bin/cli.js"
   },
+  "engines": {
+    "node": "20.17.0"
+  },
   "scripts": {
     "cli-mr-creator": "cli-mr-creator",
     "dev": "NODE_ENV=dev tsx src/cli.ts",
