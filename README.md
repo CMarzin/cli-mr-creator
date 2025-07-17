@@ -1,26 +1,27 @@
-# Petit script pour créer une merge request depuis le terminal !
+# Little script for creating a merge request from your CLI !
 
-![Petit script pour créer une merge request depuis le terminal](./cli-mr-creator.gif)
+![Little script for creating a merge request from your CLI](./cli-mr-creator.gif)
 
 ## Node version used 20.15.1
 
 ## Config
 
-__Créer un fichier .env à la racine de votre home directory__
+Create an .env file at the root of your home directory
 
 ```sh
 cd ~ && mkdir cli-mr-creator && cd cli-mr-creator && touch .env
 ```
 
-__Env file__
-```env
-TOKEN= // Gitlab access token
-DEV_GROUP= // organisation
-API_URL= // example: https://gitlab.com
-TARGET_BRANCH= // master/main/develop etc...
-REMOVE_SOURCE_BRANCH= // boolean
-SQUASH= // boolean
-```
+__Env file content__
+
+| Key | Description | Required | Default value |
+| ----------- | ----------- | ----------- | ----------- |
+| TOKEN |  Gitlab access token | yes | none |
+| DEV_GROUP | Gitlab organisation | yes | none |
+| API_URL | Gitlab url | yes | none |
+| TARGET_BRANCH | name of the target branch | no | master |
+| REMOVE_SOURCE_BRANCH | boolean | no | false |
+| SQUASH | boolean | no | false |
 
 ## Use the script
 
@@ -39,7 +40,7 @@ npx cli-mr-creator
 ```
 
 # TODO
-[] open source the code
-[] Refactor call api in order
-[] Système de module afin de rajouter des extensions pour les logiciels de ticketings ( Jira etc...)
-[] Traduction : FR / EN
+- Open source the code
+- Refactor call api in order
+- Système de module afin de rajouter des extensions pour les logiciels de ticketings ( Jira etc...)
+- Traduction : FR / EN
