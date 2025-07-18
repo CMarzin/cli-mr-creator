@@ -46,11 +46,11 @@ try {
   token = process.env['TOKEN']
 
   if (token === void 0 || token === '') {
-    throw "Veuillez spécifier le token pour accéder à l'api Gitlab dans un fichier ENV"
+    throw "Please specify the token to access the Gitlab API in an ENV file"
   }
 
 } catch (error) {
-  console.log(colors.red('Erreur :'), error)
+  console.log(colors.red('Error :'), error)
   process.exit(0);
 }
 
@@ -124,18 +124,18 @@ async function createMergeRequest (url, options) {
     })
 
     if (response.status === 201) {
-      console.log(`Congratulations your created the Merge Request : ${colors.green(response.data.title)}`)
-      console.log(`Available here : ${colors.green(response.data.web_url)}`)
+      console.log(`Congratulations, you created the Merge Request: ${colors.green(response.data.title)}`)
+      console.log(`Available here: ${colors.green(response.data.web_url)}`)
     }
 
   } catch (error) {
 
     if (error.response.status == 401) {
-      console.log('Création non autorisée, la merge request existe déjà : ', colors.red(error.response.statusText), error.response.status)
+      console.log('Creation not authorized, the merge request already exists: ', colors.red(error.response.statusText), error.response.status)
     } else {
-      console.log('URL : ', colors.cyan(error.response.config.url))
-      console.log('Something went wrong : ', colors.red(error.response.statusText), error.response.status)
-      console.log('Error message : ', colors.red(error.response.data))
+      console.log('URL: ', colors.cyan(error.response.config.url))
+      console.log('Something went wrong: ', colors.red(error.response.statusText), error.response.status)
+      console.log('Error message: ', colors.red(error.response.data))
     }
   }
 }
@@ -164,12 +164,12 @@ async function executePrompts () {
 
   const promptForm = new Form({
     name: 'user',
-    message: `Veuillez remplir les informations suivantes pour créer votre merge request: ${colors.cyan('[tab ou flèches pour se déplacer]')}`,
+    message: `Please fill in the following information to create your merge request: ${colors.cyan('[tab or arrows to move]')}`,
     choices: [
-      { name: 'target_branch', message: 'Spécifiez la branche cible', initial: defaultChoices.target_branch },
-      { name: 'title', message: 'Entrez le nom de la merge request', initial: defaultChoices.title },
-      { name: 'description', message: 'Entrez votre description', initial: defaultChoices.description },
-      { name: 'remove_source_branch', message: 'Supprimer la branche après le merge', initial: defaultChoices.remove_source_branch },
+      { name: 'target_branch', message: 'Specify the target branch', initial: defaultChoices.target_branch },
+      { name: 'title', message: 'Enter the name of the merge request', initial: defaultChoices.title },
+      { name: 'description', message: 'Enter your description', initial: defaultChoices.description },
+      { name: 'remove_source_branch', message: 'Delete source branch after merge', initial: defaultChoices.remove_source_branch },
       { name: 'squash', message: 'Squash commit', initial: defaultChoices.squash }
     ]
   });
@@ -182,7 +182,7 @@ async function executePrompts () {
 
     const promptSelectAssignees = new Select({
       name: 'assignee',
-      message: `Veuillez sélectionner le/la développeur(euse) désigner comme le/la ${colors.green.underline('créateur(trice)')} de la merge request : ${colors.cyan('[tab ou flèches pour se déplacer]')}`,
+      message: `Please select the developer to be designated as the ${colors.green.underline('creator')} of the merge request: ${colors.cyan('[tab or arrows to move]')}`,
       choices: groupMembers,
       result(name) {
 
@@ -198,7 +198,7 @@ async function executePrompts () {
 
     const promptSelectReviewers = new MultiSelect({
       name: 'reviewers',
-      message: `Veuillez sélectionner un(e) développeur(euse) pour ${colors.green.underline('inspecter')} votre merge request : ${colors.cyan('[tab ou flèches pour se déplacer, espace pour sélectionner]')}`,
+      message: `Please select a developer to ${colors.green.underline('review')} your merge request: ${colors.cyan('[tab or arrows to move, space to select]')}`,
       choices: groupMembers,
       result(reviewers) {
 
@@ -218,7 +218,7 @@ async function executePrompts () {
 
     const promptSelectLabels = new MultiSelect({
       name: 'labels',
-      message: `Veuillez sélectionner les ${colors.green.underline('labels')} correspondants à votre merge request : ${colors.cyan('[tab ou flèches pour se déplacer, espace pour sélectionner]')}`,
+      message: `Please select the ${colors.green.underline('labels')} corresponding to your merge request: ${colors.cyan('[tab or arrows to move, space to select]')}`,
       choices: groupLabels,
       result(labels) {
 
