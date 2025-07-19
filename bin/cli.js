@@ -3,15 +3,11 @@ import os from 'os'
 import * as dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import axios from 'axios'
 import enquirer from 'enquirer'
 import colors from 'colors'
-import {
-  getCurrentBranchName,
-  getMembers,
-  getRemoteUrl,
-  getLabels,
-} from './helpers/index.js'
+import { client } from './api-client.js'
+import { getCurrentBranchName, getMembers, getLabels } from './helpers/index.js'
+import { getMrUrlByProjectId, getProjectId } from './api.js'
 const homedir = os.homedir()
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -21,7 +17,6 @@ let config =
     : { path: homedir + '/cli-mr-creator/.env' }
 dotenv.config(config)
 const { Form, Select, MultiSelect } = enquirer
-const URISlash = '%2F'
 let token = ''
 /*
  * Check token
@@ -34,37 +29,6 @@ try {
 } catch (error) {
   console.log(colors.red('Erreur :'), error)
   process.exit(0)
-}
-const headers = {
-  'Private-token': token,
-}
-async function getProjectInformation() {
-  const gitPath = process.cwd() + '/.git'
-  const remoteName = 'origin'
-  const remoteUrl = await getRemoteUrl(gitPath, remoteName)
-  const regex = /[^:]+:(?:[^\/]+\/)?([^\.]+)\.git/
-  let currentProjectName = remoteUrl.match(regex)[1]
-  if (currentProjectName.includes('/')) {
-    currentProjectName = currentProjectName.replace('/', URISlash)
-  }
-  const regexOrg = /(?<=\:)(.*?)(?=\/)/
-  const org = remoteUrl.match(regexOrg)
-  const regexApiUrl = /(?<=\@)(.*?)(?=\:)/
-  const api_url = remoteUrl.match(regexApiUrl)
-  const baseUrl = `https://${api_url[0]}/api/v4/projects`
-  const currentUrlProject = `${baseUrl}/${org[0]}${URISlash}${currentProjectName}`
-  const project = await axios({
-    method: 'get',
-    url: currentUrlProject,
-    headers: {
-      ...headers,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-  })
-  return {
-    project,
-    baseUrl,
-  }
 }
 async function createMergeRequest(url, options) {
   const { dataFromPrompt, assignees, reviewers, labels } = options
@@ -79,11 +43,11 @@ async function createMergeRequest(url, options) {
     mergeRequestUrl += `&squash=${dataFromPrompt.squash}`
     mergeRequestUrl += `&assignee_id=${assignees}`
     mergeRequestUrl += `&reviewer_ids=${reviewers}`
-    mergeRequestUrl += `&labels=${labels}`
-    const response = await axios({
+    if (labels && labels.length > 0) {
+      mergeRequestUrl += `&labels=${labels}`
+    }
+    const response = await client(mergeRequestUrl, {
       method: 'post',
-      url: mergeRequestUrl,
-      headers,
     })
     if (response.status === 201) {
       console.log(
@@ -113,8 +77,8 @@ async function createMergeRequest(url, options) {
  * Execute prompt
  */
 async function executePrompts() {
-  const { project, baseUrl } = await getProjectInformation()
-  const mrUrl = `${baseUrl}/${project.data.id}/merge_requests`
+  const projectId = await getProjectId()
+  const mrUrl = await getMrUrlByProjectId(projectId)
   /*
    * Config prompt
    */
@@ -185,26 +149,38 @@ async function executePrompts() {
         return reviewersParams.substring(0, reviewersParams.length - 1)
       },
     })
-    const groupLabels = await getLabels(`${baseUrl}/${project.data.id}`)
-    const promptSelectLabels = new MultiSelect({
-      name: 'labels',
-      message: `Veuillez sélectionner les ${colors.green.underline('labels')} correspondants à votre merge request : ${colors.cyan('[tab ou flèches pour se déplacer, espace pour sélectionner]')}`,
-      choices: groupLabels,
-      result(labels) {
-        let labelsParams = ''
-        for (let i = 0; i < labels.length; i++) {
-          if (i !== labels.length - 1) {
-            labelsParams += `${labels[i]},`
-          } else {
-            labelsParams += labels[i]
+    const groupLabels = await getLabels(projectId)
+    let promptSelectLabels = null
+    let labelsSelected = []
+    if (groupLabels && groupLabels.length > 0) {
+      promptSelectLabels = new MultiSelect({
+        name: 'labels',
+        message: `Veuillez sélectionner les ${colors.green.underline('labels')} correspondants à votre merge request : ${colors.cyan('[tab ou flèches pour se déplacer, espace pour sélectionner]')}`,
+        choices: groupLabels,
+        result(labels) {
+          let labelsParams = ''
+          for (let i = 0; i < labels.length; i++) {
+            if (i !== labels.length - 1) {
+              labelsParams += `${labels[i]},`
+            } else {
+              labelsParams += labels[i]
+            }
           }
-        }
-        return labelsParams
-      },
-    })
+          return labelsParams
+        },
+      })
+    }
     const selectedAssignees = await promptSelectAssignees.run()
     const reviewersSelected = await promptSelectReviewers.run()
-    const labelsSelected = await promptSelectLabels.run()
+    if (promptSelectLabels) {
+      labelsSelected = await promptSelectLabels.run()
+    }
+    // console.log('mrUrl', mrUrl)
+    // console.log('formResult', formResult)
+    // console.log('selectedAssignees', selectedAssignees)
+    // console.log('reviewersSelected', reviewersSelected)
+    // console.log('labelsSelected', labelsSelected)
+    // process.exit(0)
     createMergeRequest(mrUrl, {
       dataFromPrompt: formResult,
       assignees: selectedAssignees,

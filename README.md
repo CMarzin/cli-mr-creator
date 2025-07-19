@@ -18,8 +18,8 @@ cd ~ && mkdir cli-mr-creator && cd cli-mr-creator && touch .env
 | -------------------- | ------------------------- | -------- | ------------- |
 | TOKEN                | Gitlab access token       | yes      | none          |
 | DEV_GROUP            | Gitlab organisation       | yes      | none          |
-| API_URL              | Gitlab url                | yes      | none          |
-| TARGET_BRANCH        | name of the target branch | no       | master        |
+| HOSTNAME             | Gitlab host name          | yes      | gitlab.com    |
+| TARGET_BRANCH        | name of the target branch | no       | main          |
 | REMOVE_SOURCE_BRANCH | boolean                   | no       | false         |
 | SQUASH               | boolean                   | no       | false         |
 
