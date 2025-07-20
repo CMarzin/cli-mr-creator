@@ -1,4 +1,20 @@
+/**
+ * Libraries
+ */
+
 import axios from 'axios'
+import colors from 'colors'
+
+/**
+ * Helpers
+ */
+
+import { isEnvVarSet } from './helpers/index.js'
+
+/**
+ * Types
+ */
+
 import type { AxiosRequestConfig } from 'axios'
 
 async function client(
@@ -11,14 +27,15 @@ async function client(
   const baseUrl = process.env['HOSTNAME']
   const token = process.env['TOKEN']
 
-  if (!baseUrl) {
-    throw new Error('HOSTNAME is not set')
-  }
+  try {
+    isEnvVarSet(token, 'TOKEN')
+    isEnvVarSet(baseUrl, 'HOSTNAME')
 
-  if (!token) {
-    throw new Error('TOKEN is not set')
-  } else {
-    headers['Private-token'] = token
+    if (token) headers['Private-token'] = token
+
+  } catch (error) {
+    console.log(colors.red('Erreur :'), error)
+    process.exit(0)
   }
 
   const config = {

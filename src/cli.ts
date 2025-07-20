@@ -12,11 +12,11 @@ import enquirer from 'enquirer'
 
 import colors from 'colors'
 
-import { client } from './api-client.js'
+// import { client } from './api-client.js'
 
-import { getCurrentBranchName, getMembers, getLabels } from './helpers/index.js'
+import { getCurrentBranchName } from './helpers/index.js'
 
-import { getMrUrlByProjectId, getProjectId } from './api.js'
+import { getMrUrlByProjectId, getProjectId, postMergeRequest, getProjectLabelsById, getMembers } from './api.js'
 
 const homedir = os.homedir()
 
@@ -33,23 +33,6 @@ dotenv.config(config)
 
 const { Form, Select, MultiSelect } = enquirer as any
 
-let token: string | undefined = ''
-
-/*
- * Check token
- */
-
-try {
-  token = process.env['TOKEN']
-
-  if (token === void 0 || token === '') {
-    throw "Veuillez spécifier le token pour accéder à l'api Gitlab dans un fichier ENV"
-  }
-} catch (error) {
-  console.log(colors.red('Erreur :'), error)
-  process.exit(0)
-}
-
 async function createMergeRequest(url: string, options: any) {
   const { dataFromPrompt, assignees, reviewers, labels } = options
 
@@ -57,20 +40,35 @@ async function createMergeRequest(url: string, options: any) {
     let mergeRequestUrl = url
     const sourceBranch = await getCurrentBranchName()
 
-    mergeRequestUrl += `?source_branch=${sourceBranch}`
-    mergeRequestUrl += `&target_branch=${dataFromPrompt.target_branch}`
-    mergeRequestUrl += `&title=${dataFromPrompt.title}`
-    mergeRequestUrl += `&description=${dataFromPrompt.description}`
-    mergeRequestUrl += `&remove_source_branch=${dataFromPrompt.remove_source_branch}`
-    mergeRequestUrl += `&squash=${dataFromPrompt.squash}`
-    mergeRequestUrl += `&assignee_id=${assignees}`
-    mergeRequestUrl += `&reviewer_ids=${reviewers}`
-    if (labels && labels.length > 0) {
-      mergeRequestUrl += `&labels=${labels}`
-    }
+    if (!sourceBranch) throw new Error("didn't find sourceBranch");
 
-    const response = await client(mergeRequestUrl, {
-      method: 'post',
+    // mergeRequestUrl += `?source_branch=${sourceBranch}`
+    // mergeRequestUrl += `&target_branch=${dataFromPrompt.target_branch}`
+    // mergeRequestUrl += `&title=${dataFromPrompt.title}`
+    // mergeRequestUrl += `&description=${dataFromPrompt.description}`
+    // mergeRequestUrl += `&remove_source_branch=${dataFromPrompt.remove_source_branch}`
+    // mergeRequestUrl += `&squash=${dataFromPrompt.squash}`
+    // mergeRequestUrl += `&assignee_id=${assignees}`
+    // mergeRequestUrl += `&reviewer_ids=${reviewers}`
+
+    // if (labels && labels.length > 0) {
+    //   mergeRequestUrl += `&labels=${labels}`
+    // }
+
+    // const response = await client(mergeRequestUrl, {
+    //   method: 'post',
+    // })
+
+    const response = await postMergeRequest(mergeRequestUrl, {
+      sourceBranch,
+      targetBranch: dataFromPrompt.target_branch,
+      title: dataFromPrompt.title,
+      description: dataFromPrompt.title,
+      removeSourceBranch: dataFromPrompt.remove_source_branch,
+      squash: dataFromPrompt.squash,
+      assigneeId: assignees,
+      reviewersId: reviewers,
+      labels
     })
 
     if (response.status === 201) {
@@ -187,7 +185,8 @@ async function executePrompts() {
       },
     })
 
-    const groupLabels = await getLabels(projectId)
+    const groupLabels = await getProjectLabelsById(projectId)
+
     let promptSelectLabels: any | null = null
     let labelsSelected: string[] = []
 
@@ -219,19 +218,13 @@ async function executePrompts() {
       labelsSelected = await promptSelectLabels.run()
     }
 
-    // console.log('mrUrl', mrUrl)
-    // console.log('formResult', formResult)
-    // console.log('selectedAssignees', selectedAssignees)
-    // console.log('reviewersSelected', reviewersSelected)
-    // console.log('labelsSelected', labelsSelected)
-    // process.exit(0)
-
     createMergeRequest(mrUrl, {
       dataFromPrompt: formResult,
       assignees: selectedAssignees,
       reviewers: reviewersSelected,
       labels: labelsSelected,
     })
+
   } catch (error) {
     console.log('error', error)
   }

@@ -8,7 +8,7 @@ async function getProjectId() {
   return projectId.data.id
 }
 function getMrUrlByProjectId(id) {
-  return `${id}/merge_requests`
+  return `projects/${id}/merge_requests`
 }
 async function postMergeRequest(id, data) {
   const mr = await client(`projects/${id}/merge_requests`, {
@@ -17,7 +17,7 @@ async function postMergeRequest(id, data) {
 }
 async function getLabelsByProjectId(id) {
   const { scopedApiUrl } = await getScopedApiUrl()
-  return `${scopedApiUrl}/${id}/labels`
+  return `projects/${id}/labels`
 }
 export { getLabelsByProjectId, getMrUrlByProjectId, getProjectId }
 //# sourceMappingURL=api.js.map
