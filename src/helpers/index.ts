@@ -10,6 +10,12 @@ import { client } from '../api-client.js'
 const execProcess = util.promisify(exec)
 const URISlash = '%2F'
 
+function isEnvVarSet(value: any, varEnv: 'HOSTNAME' | 'TOKEN' | 'DEV_GROUP') {
+  if (value === void 0 || value === '') {
+    throw `Veuillez renseigner la variable ${varEnv} dans le fichier cli-mr-creator/.env`
+  }
+}
+
 function getItemsOptions(items: { name: string; id: string }[]) {
   return items.map((item) => ({
     name: item.name,
@@ -110,4 +116,5 @@ export {
   getLabels,
   getRemoteUrl,
   getScopedApiUrl,
+  isEnvVarSet,
 }
