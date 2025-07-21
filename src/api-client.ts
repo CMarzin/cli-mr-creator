@@ -3,13 +3,12 @@
  */
 
 import axios from 'axios'
-import colors from 'colors'
 
 /**
  * Helpers
  */
 
-import { isEnvVarSet } from './helpers/index.js'
+import { checkApiEnv } from './helpers/index.js'
 
 /**
  * Types
@@ -24,19 +23,10 @@ async function client(
   const headers: Record<string, string> = {
     'Content-Type': 'application/x-www-form-urlencoded',
   }
-  const baseUrl = process.env['HOSTNAME']
-  const token = process.env['TOKEN']
 
-  try {
-    isEnvVarSet(token, 'TOKEN')
-    isEnvVarSet(baseUrl, 'HOSTNAME')
+  const { token, baseUrl } = checkApiEnv()
 
-    if (token) headers['Private-token'] = token
-
-  } catch (error) {
-    console.log(colors.red('Erreur :'), error)
-    process.exit(0)
-  }
+  headers['Private-token'] = token
 
   const config = {
     url: `${baseUrl}/api/v4/${endPoint}`,

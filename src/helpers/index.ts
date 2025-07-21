@@ -4,25 +4,87 @@ import nodegit from 'nodegit'
 import { exec } from 'child_process'
 import util from 'util'
 
-import { getLabelsByProjectId } from '../api.js'
-import { client } from '../api-client.js'
-
 const execProcess = util.promisify(exec)
 const URISlash = '%2F'
 
-function isEnvVarSet(value: any, varEnv: 'HOSTNAME' | 'TOKEN' | 'DEV_GROUP') {
-  if (value === void 0 || value === '') {
-    throw `Veuillez renseigner la variable ${varEnv} dans le fichier cli-mr-creator/.env`
+/**
+ * Types
+ */
+
+import type { ItemOptionType } from '../types/global.js'
+
+/**
+ * Check if the environment variable is set
+ *
+ * @param value - The value to check
+ * @param varEnv - The environment variable to check
+ * @returns True if the environment variable is set, throw an error otherwise
+ * @example
+ *  isEnvVarSet(process.env['HOSTNAME'], 'HOSTNAME')
+ *  // returns true or throw an error
+ */
+function isEnvVarSet(
+  value: unknown,
+  varEnv: 'HOSTNAME' | 'TOKEN' | 'DEV_GROUP',
+) {
+  if (!value || value === '') {
+    throw new Error(
+      `Veuillez renseigner la variable ${varEnv} dans le fichier ~/cli-mr-creator/.env`,
+    )
+  }
+  return true
+}
+
+/**
+ * Check if the api environment variables are set
+ *
+ * @returns The base url and the token or throw an error
+ * @example
+ *  const { baseUrl, token } = checkApiEnv()
+ *  console.log(baseUrl)
+ *  // returns "https://gitlab.com"
+ *  console.log(token)
+ *  // returns "your-token"
+ */
+function checkApiEnv() {
+  let baseUrl = ''
+  let token = ''
+
+  if (isEnvVarSet(process.env['HOSTNAME'], 'HOSTNAME'))
+    baseUrl = process.env['HOSTNAME'] as string
+  if (isEnvVarSet(process.env['TOKEN'], 'TOKEN'))
+    token = process.env['TOKEN'] as string
+
+  return {
+    baseUrl,
+    token,
   }
 }
 
-function getItemsOptions(items: { name: string; id: string }[]) {
+/**
+ * Get the items options
+ *
+ * @param items - The items to get the options from
+ * @returns The items options
+ */
+function getItemsOptions(
+  items: { name: string; id: string }[],
+): ItemOptionType[] {
   return items.map((item) => ({
     name: item.name,
     value: item.id,
   }))
 }
 
+/**
+ * Get the current branch name
+ *
+ * @returns The current branch name trimmed
+ * @example
+ *  const branchName = await getCurrentBranchName()
+ *  console.log(branchName)
+ *  // returns "main" or "feature/my-feature"
+ */
 async function getCurrentBranchName() {
   try {
     const { stdout } = await execProcess('git rev-parse --abbrev-ref HEAD')
@@ -32,30 +94,17 @@ async function getCurrentBranchName() {
   }
 }
 
-async function getMembers() {
-  try {
-    const members = await client(
-      `groups/${process.env['DEV_GROUP']}/members?per_page=100`,
-    )
-
-    return getItemsOptions(members.data)
-  } catch (error) {
-    console.log('error', error)
-  }
-}
-
-async function getLabels(id: string) {
-  const url = await getLabelsByProjectId(id)
-
-  try {
-    const response = await client(url)
-
-    return getItemsOptions(response.data)
-  } catch (error) {
-    console.log('error', error)
-  }
-}
-
+/**
+ * Get the remote url
+ *
+ * @param gitPath - The path to the git repository
+ * @param remoteName - The name of the remote
+ * @returns The remote url
+ * @example
+ *  const remoteUrl = await getRemoteUrl(gitPath, remoteName)
+ *  console.log(remoteUrl)
+ *  // returns git@gitlab.com:group/subgroup/your-project.git
+ */
 async function getRemoteUrl(gitPath: string, remoteName: string) {
   try {
     let repository = await nodegit.Repository.open(gitPath)
@@ -70,7 +119,7 @@ async function getRemoteUrl(gitPath: string, remoteName: string) {
 /**
  * Get the scoped api url
  *
- * @description This function is used in case the domain has a subgroup
+ * @description This function handles the case where the domain has a subgroup
  *
  * @returns {Promise<{scopedApiUrl: string, remoteUrlApi: string}>} - The scoped api url and the remote url api
  *
@@ -112,9 +161,8 @@ async function getScopedApiUrl() {
 export {
   getItemsOptions,
   getCurrentBranchName,
-  getMembers,
-  getLabels,
   getRemoteUrl,
   getScopedApiUrl,
   isEnvVarSet,
+  checkApiEnv,
 }

@@ -4,22 +4,26 @@ import { client } from './api-client.js'
  * Helpers
  */
 
-import { getScopedApiUrl, getCurrentBranchName, getItemsOptions, isEnvVarSet } from './helpers/index.js'
+import {
+  getScopedApiUrl,
+  getItemsOptions,
+  isEnvVarSet,
+} from './helpers/index.js'
 
 /**
  * Types
  */
 
 type MergeRequestData = {
-  sourceBranch: string;
-  targetBranch: string;
-  title: string;
-  description: string;
-  removeSourceBranch: boolean;
-  squash: boolean;
-  assigneeId: string;
-  reviewersId: string;
-  labels: string;
+  sourceBranch: string
+  targetBranch: string
+  title: string
+  description: string
+  removeSourceBranch: boolean
+  squash: boolean
+  assigneeId: string
+  reviewersId: string
+  labels: string
 }
 
 async function getProjectId() {
@@ -30,21 +34,13 @@ async function getProjectId() {
   return projectId.data.id
 }
 
-function getMrUrlByProjectId(id: string): `${string}/merge_requests` {
-  return `projects/${id}/merge_requests`
+function getProjectUrl(projectName: string): `projects/${string}` {
+  return `projects/${projectName}`
 }
 
-async function getLabelsByProjectId(id: string) {
-  const { scopedApiUrl } = await getScopedApiUrl()
-
-  return `projects/${id}/labels`
-}
-
-function getProjectUrl(projectName: string): `projects/${string}`  {
-	return `projects/${projectName}`
-}
-
-function getGroupsMembersUrl(group: string): `groups/${string}/members?per_page=100` {
+function getGroupsMembersUrl(
+  group: string,
+): `groups/${string}/members?per_page=100` {
   return `groups/${group}/members?per_page=100`
 }
 
@@ -56,9 +52,17 @@ function getLabelUrl(id: string): `projects/${string}/labels` {
   return `projects/${id}/labels`
 }
 
-
-function buildMergeRequestParams({sourceBranch, targetBranch, title, description, removeSourceBranch, squash, assigneeId, reviewersId, labels}: MergeRequestData) {
-
+function buildMergeRequestParams({
+  sourceBranch,
+  targetBranch,
+  title,
+  description,
+  removeSourceBranch,
+  squash,
+  assigneeId,
+  reviewersId,
+  labels,
+}: MergeRequestData) {
   let mergeRequestUrl = ''
 
   mergeRequestUrl += `source_branch=${sourceBranch}`
@@ -71,28 +75,30 @@ function buildMergeRequestParams({sourceBranch, targetBranch, title, description
   mergeRequestUrl += `&reviewer_ids=${reviewersId}`
   mergeRequestUrl += `&labels=${labels}`
 
-  return mergeRequestUrl  
+  return mergeRequestUrl
 }
 
 async function postMergeRequest(id: string, data: MergeRequestData) {
   try {
     const params = buildMergeRequestParams(data)
-    const mr = await client(`${getMergeRequestUrl(id)}?${params}`, {method: 'post'})
+    const mr = await client(`${getMergeRequestUrl(id)}?${params}`, {
+      method: 'post',
+    })
 
     return mr
   } catch (error: unknown) {
     console.log('createMergeRequest error', error)
-    process.exit(0)
+    process.exit(1)
   }
 }
 
 async function getRemoteProjectId(scopedApiUrl: string) {
   try {
-    const project = await client (getProjectUrl(scopedApiUrl))
+    const project = await client(getProjectUrl(scopedApiUrl))
     return project.data.id
   } catch (error: unknown) {
     console.log('getRemoteProjectId error', error)
-    process.exit(0)
+    process.exit(1)
   }
 }
 
@@ -102,7 +108,7 @@ async function getProjectLabelsById(id: string) {
     return getItemsOptions(response.data)
   } catch (error: unknown) {
     console.log('getProjectLabelsById error', error)
-    process.exit(0)
+    process.exit(1)
   }
 }
 
@@ -112,7 +118,7 @@ async function getMembers() {
     isEnvVarSet(devGroup, 'DEV_GROUP')
 
     if (!devGroup) return
-    
+
     const response = await client(getGroupsMembersUrl(devGroup))
 
     return getItemsOptions(response.data)
@@ -121,4 +127,17 @@ async function getMembers() {
   }
 }
 
-export { getLabelsByProjectId, getMrUrlByProjectId, getProjectId, getProjectLabelsById,getRemoteProjectId, getProjectUrl, getGroupsMembersUrl, getMergeRequestUrl, getLabelUrl, postMergeRequest, getMembers }
+export type { MergeRequestData }
+
+export {
+  getProjectId,
+  getProjectLabelsById,
+  getRemoteProjectId,
+  getProjectUrl,
+  getGroupsMembersUrl,
+  getMergeRequestUrl,
+  getLabelUrl,
+  postMergeRequest,
+  getMembers,
+  buildMergeRequestParams,
+}
