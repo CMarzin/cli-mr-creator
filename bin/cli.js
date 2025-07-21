@@ -5,9 +5,19 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import enquirer from 'enquirer'
 import colors from 'colors'
-import { client } from './api-client.js'
-import { getCurrentBranchName, getMembers, getLabels } from './helpers/index.js'
-import { getMrUrlByProjectId, getProjectId } from './api.js'
+import { getCurrentBranchName } from './helpers/index.js'
+import {
+  assigneeFormConfig,
+  baseFormConfig,
+  labelsFormConfig,
+  reviewersFormConfig,
+} from './prompt.js'
+import {
+  getProjectId,
+  postMergeRequest,
+  getProjectLabelsById,
+  getMembers,
+} from './api.js'
 const homedir = os.homedir()
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -17,37 +27,21 @@ let config =
     : { path: homedir + '/cli-mr-creator/.env' }
 dotenv.config(config)
 const { Form, Select, MultiSelect } = enquirer
-let token = ''
-/*
- * Check token
- */
-try {
-  token = process.env['TOKEN']
-  if (token === void 0 || token === '') {
-    throw "Veuillez spécifier le token pour accéder à l'api Gitlab dans un fichier ENV"
-  }
-} catch (error) {
-  console.log(colors.red('Erreur :'), error)
-  process.exit(0)
-}
-async function createMergeRequest(url, options) {
-  const { dataFromPrompt, assignees, reviewers, labels } = options
+async function createMergeRequest(projectId, options) {
+  const { dataFromPrompt, assignee, reviewers, labels } = options
   try {
-    let mergeRequestUrl = url
     const sourceBranch = await getCurrentBranchName()
-    mergeRequestUrl += `?source_branch=${sourceBranch}`
-    mergeRequestUrl += `&target_branch=${dataFromPrompt.target_branch}`
-    mergeRequestUrl += `&title=${dataFromPrompt.title}`
-    mergeRequestUrl += `&description=${dataFromPrompt.description}`
-    mergeRequestUrl += `&remove_source_branch=${dataFromPrompt.remove_source_branch}`
-    mergeRequestUrl += `&squash=${dataFromPrompt.squash}`
-    mergeRequestUrl += `&assignee_id=${assignees}`
-    mergeRequestUrl += `&reviewer_ids=${reviewers}`
-    if (labels && labels.length > 0) {
-      mergeRequestUrl += `&labels=${labels}`
-    }
-    const response = await client(mergeRequestUrl, {
-      method: 'post',
+    if (!sourceBranch) throw new Error("didn't find sourceBranch")
+    const response = await postMergeRequest(projectId, {
+      sourceBranch,
+      targetBranch: dataFromPrompt.targetBranch,
+      title: dataFromPrompt.title,
+      description: dataFromPrompt.description,
+      removeSourceBranch: dataFromPrompt.removeSourceBranch,
+      squash: dataFromPrompt.squash,
+      assigneeId: assignee,
+      reviewersId: reviewers,
+      labels,
     })
     if (response.status === 201) {
       console.log(
@@ -78,112 +72,31 @@ async function createMergeRequest(url, options) {
  */
 async function executePrompts() {
   const projectId = await getProjectId()
-  const mrUrl = await getMrUrlByProjectId(projectId)
-  /*
-   * Config prompt
-   */
-  const defaultChoices = {
-    target_branch: process.env['TARGET_BRANCH'] || 'master',
-    title: await getCurrentBranchName(),
-    remove_source_branch: process.env['REMOVE_SOURCE_BRANCH'] || false,
-    squash: process.env['SQUASH'] || false,
-    description: '',
-  }
-  const promptForm = new Form({
-    name: 'user',
-    message: `Veuillez remplir les informations suivantes pour créer votre merge request: ${colors.cyan('[tab ou flèches pour se déplacer]')}`,
-    choices: [
-      {
-        name: 'target_branch',
-        message: 'Spécifiez la branche cible',
-        initial: defaultChoices.target_branch,
-      },
-      {
-        name: 'title',
-        message: 'Entrez le nom de la merge request',
-        initial: defaultChoices.title,
-      },
-      {
-        name: 'description',
-        message: 'Entrez votre description',
-        initial: defaultChoices.description,
-      },
-      {
-        name: 'remove_source_branch',
-        message: 'Supprimer la branche après le merge',
-        initial: defaultChoices.remove_source_branch,
-      },
-      {
-        name: 'squash',
-        message: 'Squash commit',
-        initial: defaultChoices.squash,
-      },
-    ],
-  })
   try {
+    const branchName = await getCurrentBranchName()
+    if (!branchName) throw new Error("didn't find branchName")
+    const promptForm = new Form(baseFormConfig(branchName))
     const formResult = await promptForm.run()
     const groupMembers = await getMembers()
-    const promptSelectAssignees = new Select({
-      name: 'assignee',
-      message: `Veuillez sélectionner le/la développeur(euse) désigner comme le/la ${colors.green.underline('créateur(trice)')} de la merge request : ${colors.cyan('[tab ou flèches pour se déplacer]')}`,
-      choices: groupMembers,
-      result(name) {
-        const valueAssignee = this.choices.find((choice) => {
-          if (choice.name === name) {
-            return choice.value
-          }
-        })
-        return valueAssignee.value
-      },
-    })
-    const promptSelectReviewers = new MultiSelect({
-      name: 'reviewers',
-      message: `Veuillez sélectionner un(e) développeur(euse) pour ${colors.green.underline('inspecter')} votre merge request : ${colors.cyan('[tab ou flèches pour se déplacer, espace pour sélectionner]')}`,
-      choices: groupMembers,
-      result(reviewers) {
-        const resultKeyValue = this.map(reviewers)
-        let reviewersParams = ''
-        for (const property in resultKeyValue) {
-          reviewersParams += `${resultKeyValue[property]},`
-        }
-        return reviewersParams.substring(0, reviewersParams.length - 1)
-      },
-    })
-    const groupLabels = await getLabels(projectId)
+    if (!groupMembers || groupMembers.length === 0) {
+      throw new Error('No group members found')
+    }
+    const promptSelectAssignees = new Select(assigneeFormConfig(groupMembers))
+    const promptSelectReviewers = new MultiSelect(
+      reviewersFormConfig(groupMembers),
+    )
+    const groupLabels = await getProjectLabelsById(projectId)
     let promptSelectLabels = null
-    let labelsSelected = []
+    let labelsSelected = ''
     if (groupLabels && groupLabels.length > 0) {
-      promptSelectLabels = new MultiSelect({
-        name: 'labels',
-        message: `Veuillez sélectionner les ${colors.green.underline('labels')} correspondants à votre merge request : ${colors.cyan('[tab ou flèches pour se déplacer, espace pour sélectionner]')}`,
-        choices: groupLabels,
-        result(labels) {
-          let labelsParams = ''
-          for (let i = 0; i < labels.length; i++) {
-            if (i !== labels.length - 1) {
-              labelsParams += `${labels[i]},`
-            } else {
-              labelsParams += labels[i]
-            }
-          }
-          return labelsParams
-        },
-      })
+      promptSelectLabels = new MultiSelect(labelsFormConfig(groupLabels))
     }
     const selectedAssignees = await promptSelectAssignees.run()
     const reviewersSelected = await promptSelectReviewers.run()
-    if (promptSelectLabels) {
-      labelsSelected = await promptSelectLabels.run()
-    }
-    // console.log('mrUrl', mrUrl)
-    // console.log('formResult', formResult)
-    // console.log('selectedAssignees', selectedAssignees)
-    // console.log('reviewersSelected', reviewersSelected)
-    // console.log('labelsSelected', labelsSelected)
-    // process.exit(0)
-    createMergeRequest(mrUrl, {
+    if (promptSelectLabels) labelsSelected = await promptSelectLabels.run()
+    createMergeRequest(projectId, {
       dataFromPrompt: formResult,
-      assignees: selectedAssignees,
+      assignee: selectedAssignees,
       reviewers: reviewersSelected,
       labels: labelsSelected,
     })
